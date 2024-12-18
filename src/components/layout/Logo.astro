@@ -1,0 +1,21 @@
+---
+import { siteConfig } from '../../config/site';
+---
+
+<a href="/" class="logo">
+  {siteConfig.name}
+</a>
+
+<style>
+  .logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .logo:hover {
+    color: var(--color-primary);
+  }
+</style>

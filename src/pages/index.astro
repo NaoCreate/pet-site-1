@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PetCard from '../components/pets/PetCard.astro';
+import { getLatestPets } from '../lib/api/pets';
+
+// 最新の個体情報を取得（9件）
+const pets = await getLatestPets(9);
+---
+
+<Layout title="ペットショップ">
+  <main>
+    <section class="latest-pets">
+      <div class="container">
+        <h2 class="section-title">新着ペット</h2>
+        <div class="pets-grid">
+          {pets.map((pet) => (
+            <PetCard pet={pet} />
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .latest-pets {
+    padding: 4rem 0;
+    background-color: var(--color-background-secondary);
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: var(--color-text);
+  }
+
+  .pets-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
+    padding: 0 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .pets-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .pets-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

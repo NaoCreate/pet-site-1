@@ -1,0 +1,38 @@
+---
+import { siteConfig } from '../../config/site';
+import NavigationItem from './NavigationItem.astro';
+import { getAnimalTypes, getBreedsByAnimalType } from '../../lib/api/pets';
+
+const animalTypes = await getAnimalTypes();
+const submenuItems = await Promise.all(
+  animalTypes.map(async (type) => {
+    const { pureBreeds, hasMix } = await getBreedsByAnimalType(type);
+    return { type, breeds: pureBreeds, hasMix };
+  })
+);
+---
+
+<nav class="nav">
+  <ul class="nav-list">
+    <NavigationItem 
+      title="探す"
+      submenu={submenuItems}
+    />
+    <NavigationItem title="Cattleyaの安心" href={siteConfig.links.about} />
+    <NavigationItem title="会社情報" href={siteConfig.links.company} />
+    <NavigationItem title="店舗情報" href={siteConfig.links.stores} />
+    <NavigationItem title="お問い合わせ" href={siteConfig.links.contact} />
+  </ul>
+</nav>
+
+<style>
+  .nav {
+    height: 100%;
+  }
+
+  .nav-list {
+    display: flex;
+    gap: 2rem;
+    height: 100%;
+  }
+</style>

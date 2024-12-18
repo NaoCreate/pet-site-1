@@ -1,0 +1,277 @@
+---
+import { getPetsByAnimalType } from '../../lib/api/pets';
+
+// 犬種/猫種の型定義
+interface Breed {
+  name: string;  // 犬種/猫種の名前（日本語）
+  url: string;   // 詳細ページへのURL
+}
+
+// サブメニュー項目の型定義
+interface SubmenuItem {
+  type: string;     // 動物の種類（dog/cat等）
+  breeds: Breed[];  // 血統書付きの犬種/猫種一覧
+  hasMix: boolean;  // ミックスの有無
+}
+
+// コンポーネントのプロパティ定義
+interface Props {
+  title: string;    // メニュー項目のタイトル
+  href?: string;    // リンク先URL（サブメニューがない場合）
+  submenu?: SubmenuItem[]; // サブメニューの項目一覧
+}
+
+const { title, href, submenu } = Astro.props;
+// サブメニューの有無をチェック
+const hasSubmenu = !!submenu?.length;
+
+// 各動物種類のミックス犬種/猫種を取得
+const mixBreeds = await Promise.all(
+  submenu?.map(async (item) => {
+    if (item.hasMix) {
+      const pets = await getPetsByAnimalType(item.type);
+      const mixBreeds = pets
+        .filter(pet => pet.classification === 'mix')
+        .map(pet => ({
+          name: pet.breedTypeJa,
+          url: `/animals/${item.type}/mix/${encodeURIComponent(pet.breedTypeJa)}`
+        }));
+      return { type: item.type, breeds: mixBreeds };
+    }
+    return { type: item.type, breeds: [] };
+  }) ?? []
+);
+---
+
+<li class="nav-item">
+  {hasSubmenu ? (
+    <div class="nav-link">
+      {title}
+      <svg
+        class="icon"
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M4 6L8 10L12 6"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <div class="submenu">
+        {submenu.map((item) => (
+          <div class="submenu-group">
+            <a href={`/animals/${item.type}`} class="submenu-link submenu-type">
+              {item.type}
+              {(item.breeds.length > 0 || item.hasMix) && (
+                <svg
+                  class="icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M6 4L10 8L6 12"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              )}
+            </a>
+            {(item.breeds.length > 0 || item.hasMix) && (
+              <div class="submenu-breeds">
+                {item.breeds.map((breed) => (
+                  <a href={breed.url} class="submenu-link breed-link">
+                    {breed.name}
+                  </a>
+                ))}
+                {item.hasMix && (
+                  <div class="mix-breeds-group">
+                    <a
+                      href={`/animals/${item.type}/mix`}
+                      class="submenu-link mix-link"
+                    >
+                      ミックス
+                      <svg
+                        class="icon"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M6 4L10 8L6 12"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </a>
+                    <div class="mix-breeds-submenu">
+                      {mixBreeds.find(mb => mb.type === item.type)?.breeds.map((mixBreed) => (
+                        <a href={mixBreed.url} class="submenu-link mix-breed-link">
+                          {mixBreed.name}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <a href={href} class="nav-link">
+      {title}
+    </a>
+  )}
+</li>
+
+<style>
+  /* 既存のスタイルはそのまま保持 */
+  .nav-item {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--color-text);
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.9375rem;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover {
+    color: var(--color-primary);
+  }
+
+  .icon {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s;
+  }
+
+  .submenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+  }
+
+  .nav-item:hover .submenu {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .submenu-group {
+    position: relative;
+  }
+
+  .submenu-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+  }
+
+  .submenu-link:hover {
+    background-color: var(--color-background-secondary);
+  }
+
+  .submenu-breeds {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 200px;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+  }
+
+  .submenu-group:hover .submenu-breeds {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .mix-breeds-group {
+    position: relative;
+  }
+
+  .mix-breeds-submenu {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 200px;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+  }
+
+  .mix-breeds-group:hover .mix-breeds-submenu {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .breed-link {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .breed-link:last-of-type {
+    border-bottom: none;
+  }
+
+  .mix-link {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .mix-breed-link {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mix-breed-link:last-child {
+    border-bottom: none;
+  }
+
+  .submenu-type {
+    font-weight: 500;
+  }
+</style>

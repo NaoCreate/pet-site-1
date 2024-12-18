@@ -1,0 +1,105 @@
+---
+import type { Pet } from '../../lib/api/pets/types';
+import { formatDate } from '../../lib/utils/date';
+import { getGoogleDriveImageUrl } from '../../lib/utils/image';
+
+interface Props {
+  pet: Pet;
+}
+
+const { pet } = Astro.props;
+const imageUrl = getGoogleDriveImageUrl(pet.imageUrl01);
+---
+
+<div class="pet-card">
+  <div class="pet-image">
+    <img
+      src={imageUrl}
+      alt={`${pet.breedTypeJa}の写真`}
+      loading="lazy"
+    />
+  </div>
+  <div class="pet-info">
+    <h3 class="breed-name">{pet.breedTypeJa}</h3>
+    <div class="details">
+      <p class="detail-item">
+        <span class="label">色:</span>
+        <span class="value">{pet.color}</span>
+      </p>
+      <p class="detail-item">
+        <span class="label">{pet.gender}</span>
+        <span class="value">{formatDate(pet.birthday)}生</span>
+      </p>
+      <p class="detail-item">
+        <span class="value">{pet.store}</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pet-card {
+    background: var(--color-background);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .pet-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .pet-image {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background-color: var(--color-background-secondary);
+  }
+
+  .pet-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+  }
+
+  .pet-card:hover .pet-image img {
+    transform: scale(1.05);
+  }
+
+  .pet-info {
+    padding: 1rem;
+    background-color: var(--color-background);
+  }
+
+  .breed-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    color: var(--color-text);
+  }
+
+  .details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .label {
+    color: var(--color-text-light);
+  }
+
+  .value {
+    color: var(--color-text);
+  }
+</style>
